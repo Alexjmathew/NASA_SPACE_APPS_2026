@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SAR + AIS Mission Console</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{--navy:#0d3b8c;--navy2:#0a2d6e;--bg:#eef3f8;--card:#fff;--ink:#16243a;--mute:#5d6f86;--line:#dbe4ee;--blue:#1d4ed8;--cyan:#0ea5c6;--amber:#e08a12;--ok:#0e9f6e;
+--mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;--sans:'Inter',system-ui,Segoe UI,Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
+header{background:linear-gradient(180deg,var(--navy),var(--navy2));color:#fff;padding:18px 24px 0}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.badge{width:54px;height:54px;border-radius:50%;border:3px solid #7fd3f2;display:grid;place-items:center;font:700 15px var(--sans);letter-spacing:1px}
+.ttl{flex:1;min-width:280px}
+.ttl .l1{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font:500 12px var(--mono);letter-spacing:1px}
+.pill{background:#1b52c4;border:1px solid #5b8cf0;padding:2px 10px;border-radius:5px;font-weight:600}
+.ttl h1{margin:6px 0 0;font-size:22px;font-weight:700}
+.clock{background:#0a1f45;border:1px solid #2a4a8f;border-radius:10px;padding:10px 16px;text-align:right}
+.clock small{display:block;font:500 10px var(--mono);letter-spacing:2px;color:#7fd3f2}
+.clock b{font:600 20px var(--mono)}
+nav{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #335aa8;margin-top:14px;padding:14px 0}
+nav button{background:none;border:0;color:#e6efff;font:600 16px var(--sans);padding:10px 18px;border-radius:24px;cursor:pointer}
+nav button.on{background:#fff;color:var(--navy)}
+nav button.on::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#1aa6e6;margin-right:9px}
+main{padding:20px 24px 40px;max-width:1500px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr) 1.15fr;gap:16px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+.kpi small{display:block;font-weight:600;letter-spacing:.5px;color:var(--mute);text-transform:uppercase;font-size:13px}
+.kpi b{font:700 32px var(--sans)}
+.kpi .ic{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:#eef4ff;font-size:20px}
+.kpi.m{border-color:#a5e3f2;background:#f1fcff}.kpi.m b,.kpi.m small{color:#0a7f99}
+.kpi.u{border-color:#f5dca7;background:#fffbf1}.kpi.u b,.kpi.u small{color:#b45f06}
+.aoi{background:var(--navy);color:#fff;border-radius:14px;padding:14px 18px;font:500 13px var(--mono)}
+.aoi small{color:#7fd3f2;letter-spacing:1px;font-weight:600}
+.grid{display:grid;grid-template-columns:310px 1fr 330px;gap:18px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel h3{margin:0;font:700 16px var(--sans);color:var(--navy);letter-spacing:.5px}
+.sub{color:var(--mute);font-size:13px}
+.gate{font:500 11px var(--mono);border:1px solid #a9c4ee;background:#eef4ff;border-radius:6px;padding:6px 10px;color:var(--navy)}
+.layer{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#f6f9fc;border-radius:10px;padding:11px 12px;margin-top:9px;font-weight:500;cursor:pointer}
+.layer i{width:12px;height:12px;border-radius:50%}
+.layer input{margin-left:auto;width:20px;height:20px;accent-color:var(--navy)}
+.sl{margin-top:16px}.sl div.h{display:flex;justify-content:space-between;font-weight:600}.sl .v{font:600 14px var(--mono);color:var(--navy)}
+.sl input{width:100%;accent-color:var(--navy)}
+.sl .sc{display:flex;justify-content:space-between;font:500 11px var(--mono);color:var(--mute)}
+.maphead{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.maphead h3{flex:1}
+.coord{font:500 13px var(--mono);border:1px solid var(--line);border-radius:6px;padding:5px 12px}
+.mbtn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 12px;font:600 13px var(--mono);cursor:pointer}
+.mapwrap{position:relative;background:#061a33;height:520px;border-radius:0 0 14px 14px;overflow:hidden}
+#map{width:100%;height:100%;display:block;cursor:grab}
+.hint{position:absolute;top:14px;right:16px;background:rgba(10,30,60,.85);border:1px solid #2a4a8f;color:#bfe6ff;font:500 12px var(--mono);padding:7px 12px;border-radius:6px;pointer-events:none}
+.mapcard{padding:0;overflow:hidden}
+.tel h3{font:500 11px var(--mono);color:var(--mute);letter-spacing:1px}
+.tel .name{font:700 20px var(--mono);color:var(--navy)}
+.tag{font:600 11px var(--mono);border-radius:6px;padding:5px 9px;border:1px solid}
+.tag.m{color:#0a7f99;border-color:#7fd3f2;background:#effcff}.tag.u{color:#b45f06;border-color:#f3c46b;background:#fff8e8}.tag.a{color:var(--navy);border-color:#a9c4ee;background:#eef4ff}
+.cells{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.cell{border:1px solid var(--line);background:#f6f9fc;border-radius:8px;padding:9px 11px}
+.cell small{display:block;font:500 11px var(--mono);color:var(--mute);letter-spacing:.5px}
+.cell b{font:600 15px var(--mono)}
+.kv{display:flex;justify-content:space-between;padding:4px 0}.kv span:first-child{color:var(--mute)}.kv b{font:600 14px var(--mono)}
+.conf{background:#e8f1ff;border-radius:6px;padding:3px 10px;font:700 14px var(--mono);color:var(--navy)}
+.flag{width:100%;margin-top:14px;border:1px solid #aab8cb;background:#fff;border-radius:8px;padding:12px;font:600 14px var(--sans);cursor:pointer}
+.flag.on{background:#fff4d6;border-color:#e0a000}
+.tabpane{display:none}.tabpane.on{display:block}
+.two{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+.sarwrap{background:#000;border-radius:14px;overflow:hidden;position:relative}
+#sar{width:100%;display:block}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}th{font:600 11px var(--mono);color:var(--mute)}
+.flow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.step{flex:1 1 170px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+.step b{display:block;font:700 12px var(--mono);color:var(--cyan);margin-bottom:6px}
+.step h4{margin:0 0 6px;font-size:16px;color:var(--navy)}
+.step p{margin:0;color:var(--mute);font-size:13px}
+.arrow{align-self:center;color:var(--navy);font-size:22px}
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.road .panel h4{margin:0 0 8px;color:var(--navy)}.road ul{margin:0;padding-left:18px;color:var(--mute)}
+.foot{margin-top:18px;color:var(--mute);font-size:12px}
+@media(max-width:1150px){.grid,.two{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+ <div class="top">
+  <div class="badge">SAR</div>
+  <div class="ttl">
+   <div class="l1"><span class="pill">NASA SPACE APPS CHALLENGE</span><span>SAR + AIS DATA FUSION MISSION CONSOLE</span></div>
+   <h1>SAR-Based AI-Powered Multi-Sensor Maritime Awareness System</h1>
+  </div>
+  <div class="clock"><small>SATELLITE ACQUISITION UTC</small><b id="clock">--</b></div>
+ </div>
+ <nav id="tabs">
+  <button class="on" data-t="t1">1. Live Tactical Fusion Map</button>
+  <button data-t="t2">2. SAR Image &amp; Candidate Detector</button>
+  <button data-t="t3">3. System Architecture &amp; Pipeline</button>
+  <button data-t="t4">4. Mission Brief &amp; Roadmap</button>
+ </nav>
+</header>
+<main>
+
+<!-- TAB 1 -->
+<section class="tabpane on" id="t1">
+ <div class="kpis">
+  <div class="kpi"><div><small>SAR Detections</small><b id="kSar">0</b></div><div class="ic">◎</div></div>
+  <div class="kpi"><div><small>AIS Broadcasts</small><b id="kAis" style="color:var(--blue)">0</b></div><div class="ic">≋</div></div>
+  <div class="kpi m"><div><small>SAR + AIS Matched</small><b id="kMat">0</b></div><div class="ic">✓</div></div>
+  <div class="kpi u"><div><small>Unmatched SAR</small><b id="kUn">0</b></div><div class="ic">⚠</div></div>
+  <div class="aoi"><small>AOI SECTOR // ARABIAN SEA</small><div style="margin:6px 0;font-weight:600">09.40°N - 10.30°N |<br>75.60°E - 76.45°E</div><small style="font-weight:400">Swath: Sentinel-1A IW VV/VH</small></div>
+ </div>
+ <div class="grid">
+  <div class="panel">
+   <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+    <div><h3>SENSOR &amp; FUSION<br>CONTROLS</h3><div class="sub">Adjust spatio-temporal association gates</div></div><span class="gate">GATE v1.4</span>
+   </div>
+   <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+   <div class="sub" style="font-weight:700;letter-spacing:1px">DATA LAYERS</div>
+   <label class="layer"><i style="background:#f59e0b"></i>SAR Detections<input type="checkbox" id="lSar" checked></label>
+   <label class="layer"><i style="background:#2563eb"></i>AIS Broadcasts<input type="checkbox" id="lAis" checked></label>
+   <label class="layer"><i style="background:#06b6d4"></i>Matched Fusion Links<input type="checkbox" id="lLnk" checked></label>
+   <div class="sl"><div class="h"><span>Spatial Radius (Δd)</span><span class="v" id="vR">3.5 km</span></div><input type="range" id="sR" min="0.5" max="10" step="0.1" value="3.5"><div class="sc"><span>0.5 km</span><span>5.0 km</span><span>10.0 km</span></div></div>
+   <div class="sl"><div class="h"><span>Time Window (Δt)</span><span class="v" id="vW">15 min</span></div><input type="range" id="sW" min="1" max="60" step="1" value="15"><div class="sc"><span>1 min</span><span>30 min</span><span>60 min</span></div></div>
+   <p class="sub" style="margin-top:16px">Widen the gates and more SAR targets pair with AIS. Tighten them and more targets become unmatched and are queued for review.</p>
+  </div>
+
+  <div class="panel mapcard">
+   <div class="maphead"><h3>TACTICAL MARITIME RADAR CHART</h3><span class="coord" id="coord">--</span><button class="mbtn" id="zin">+</button><button class="mbtn" id="zout">−</button><button class="mbtn" id="zrst">Reset</button></div>
+   <div class="mapwrap"><canvas id="map"></canvas><div class="hint">Click target to inspect • Drag to pan • Scroll to zoom</div></div>
+  </div>
+
+  <div class="panel tel" id="tel"></div>
+ </div>
+</section>
+
+<!-- TAB 2 -->
+<section class="tabpane" id="t2">
+ <div class="two">
+  <div>
+   <div class="sarwrap"><canvas id="sar" width="1000" height="640"></canvas></div>
+  </div>
+  <div class="panel">
+   <h3>CANDIDATE DETECTOR (CFAR)</h3>
+   <p class="sub">Synthetic Sentinel-1 style scene. A pixel is a ship candidate when it is brighter than <i>T</i> × the local sea mean.</p>
+   <div class="sl"><div class="h"><span>Threshold T</span><span class="v" id="vT">6.0</span></div><input type="range" id="sT" min="2" max="12" step="0.5" value="6"></div>
+   <p class="sub" id="detInfo"></p>
+   <table><thead><tr><th>ID</th><th>X,Y (px)</th><th>SNR dB</th><th>Len m</th></tr></thead><tbody id="detRows"></tbody></table>
+   <p class="foot">The Python app (<code>sar_detector_ui.py</code>) runs the same idea on real images and with a trained YOLO model.</p>
+  </div>
+ </div>
+</section>
+
+<!-- TAB 3 -->
+<section class="tabpane" id="t3">
+ <div class="panel"><h3>END-TO-END PIPELINE</h3>
+  <div class="flow" style="margin-top:14px">
+   <div class="step"><b>01 · INGEST</b><h4>SAR scene</h4><p>Sentinel-1 GRD via NASA Earthdata (ASF DAAC). Georeferenced, time-stamped.</p></div><div class="arrow">→</div>
+   <div class="step"><b>02 · DETECT</b><h4>Ship candidates</h4><p>YOLO trained on SSDD, HRSID and OPEN-SSDD, or classic CFAR. Tiled for large scenes.</p></div><div class="arrow">→</div>
+   <div class="step"><b>03 · ESTIMATE</b><h4>Wake and heading</h4><p>Brightest ray from the ship gives the wake bearing; heading is the opposite direction.</p></div><div class="arrow">→</div>
+   <div class="step"><b>04 · FUSE</b><h4>AIS association</h4><p>Kalman-predict each AIS track to the SAR time, gate by distance and time, assign with the Hungarian method.</p></div><div class="arrow">→</div>
+   <div class="step"><b>05 · SCORE</b><h4>Anomaly alerts</h4><p>Dark vessels, course mismatch, stale AIS and stopped-but-wake cases are scored and queued for human review.</p></div>
+  </div>
+ </div>
+ <div class="panel" style="margin-top:18px"><h3>REPOSITORY MODULES</h3>
+  <table><thead><tr><th>File</th><th>Role</th></tr></thead><tbody>
+   <tr><td><code>code/maritime_awareness.py</code></td><td>Full SAR + AIS pipeline: georeferencing, Kalman, wake, anomaly scoring</td></tr>
+   <tr><td><code>code/sar_detector_ui.py</code></td><td>Tkinter desktop app, SAR only, CFAR or YOLO</td></tr>
+   <tr><td><code>code/train_sar_ship.py</code></td><td>Dataset preparation, YOLO training, evaluation, inference</td></tr>
+   <tr><td><code>notebooks/*.ipynb</code></td><td>Colab and Kaggle training notebooks</td></tr>
+  </tbody></table></div>
+</section>
+
+<!-- TAB 4 -->
+<section class="tabpane" id="t4">
+ <div class="panel"><h3>MISSION BRIEF</h3>
+  <p>Oceans are too large to patrol, optical satellites are blind through cloud and night, and ships can switch off AIS. Synthetic Aperture Radar sees through weather. This system detects ships in SAR images, estimates their direction of travel from wakes, cross-checks them with AIS broadcasts and flags suspicious vessels for a human operator.</p>
+  <p class="sub">Console data on the tactical map is a demonstration scenario with made-up vessels.</p></div>
+ <div class="road" style="margin-top:18px">
+  <div class="panel"><h4>Done</h4><ul><li>Ship detector (CFAR and YOLO training code)</li><li>Wake direction estimation</li><li>Kalman + time-aware AIS matching</li><li>Anomaly scoring</li><li>Desktop app and this console</li></ul></div>
+  <div class="panel"><h4>Next</h4><ul><li>Validate on real Sentinel-1 scenes</li><li>Report mAP / recall on a held-out set</li><li>Live AIS feed (AISStream)</li></ul></div>
+  <div class="panel"><h4>Later</h4><ul><li>Operator alert workflow</li><li>Sea-land masks to cut port false alarms</li><li>Rotated-box and ship-class models</li></ul></div>
+ </div>
+</section>
+<p class="foot">Demonstration console. Vessels, positions and values are simulated.</p>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
+
+/* ---------- clock ---------- */
+var t0=Date.UTC(2026,10,15,4,54,15),w0=Date.now();
+function tick(){var d=new Date(t0+Date.now()-w0),p=function(n){return String(n).padStart(2,'0');};
+  $('clock').textContent=d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate())+' '+p(d.getUTCHours())+':'+p(d.getUTCMinutes())+':'+p(d.getUTCSeconds())+' UTC';}
+tick();setInterval(tick,1000);
+
+/* ---------- tabs ---------- */
+$('tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+  [].forEach.call($('tabs').children,function(x){x.classList.toggle('on',x===b);});
+  [].forEach.call(document.querySelectorAll('.tabpane'),function(p){p.classList.toggle('on',p.id===b.dataset.t);});
+  if(b.dataset.t==='t1')sizeMap();if(b.dataset.t==='t2')drawSar();});
+
+/* ---------- scenario (made up) ---------- */
+var LAT0=9.40,LAT1=10.30,LON0=75.60,LON1=76.45,KMLAT=110.574,KMLON=111.32*Math.cos(9.85*Math.PI/180);
+var AIS=[
+ {n:'MT KERALA EXPRESS',s:'MT KERALA EXPRESS',mmsi:419001122,lat:10.185,lon:76.020,sog:9.4,cog:215,dt:120},
+ {n:'FV SAGAR JYOTHI',mmsi:419004455,lat:10.030,lon:75.960,sog:6.1,cog:270,dt:240},
+ {n:'MV ARABIAN',mmsi:636011223,lat:9.930,lon:75.925,sog:12.2,cog:300,dt:150,sar:'SAR-2601',off:[310,40],rcs:-8.4,dim:'172m × 26m'},
+ {n:'MT OCEANIC VANGUARD',short:'MT OCEANIC',mmsi:538007912,lat:9.84873,lon:75.94078,sog:11.8,cog:315,dt:180,sar:'SAR-2602',off:[492,80],rcs:-9.2,dim:'185m × 28m'},
+ {n:'MV PACIFIC',mmsi:477305120,lat:9.905,lon:76.012,sog:10.7,cog:285,dt:300,sar:'SAR-2604',off:[1150,200],rcs:-10.1,dim:'160m × 24m'},
+ {n:'MV NORDIC STAR',mmsi:257884100,lat:9.700,lon:75.950,sog:13.0,cog:20,dt:480},
+ {n:'SV KOCHI PILOT',mmsi:419077001,lat:9.620,lon:76.050,sog:7.5,cog:90,dt:600,sar:'SAR-2603',off:[2500,150],rcs:-12.0,dim:'64m × 12m'}
+];
+var SAR=[];
+AIS.forEach(function(a){if(a.sar){var b=a.off[1]*Math.PI/180,d=a.off[0]/1000;
+  SAR.push({id:a.sar,lat:a.lat+d*Math.cos(b)/KMLAT,lon:a.lon+d*Math.sin(b)/KMLON,rcs:a.rcs,dim:a.dim,ais:a,rev:false});}});
+SAR.push({id:'SAR-2605',lat:9.955,lon:75.905,rcs:-7.1,dim:'210m × 31m',rev:true});
+SAR.push({id:'SAR-2606',lat:9.865,lon:75.775,rcs:-6.4,dim:'240m × 36m',rev:true});
+SAR.push({id:'SAR-2607',lat:9.555,lon:75.880,rcs:-11.3,dim:'95m × 15m',rev:true});
+SAR.sort(function(a,b){return a.id<b.id?-1:1;});
+function km(a,b){var dx=(a.lon-b.lon)*KMLON,dy=(a.lat-b.lat)*KMLAT;return Math.hypot(dx,dy);}
+
+/* ---------- fusion (re-run when sliders move) ---------- */
+var R=3.5,W=15,sel='SAR-2602',flags={};
+function fuse(){
+  SAR.forEach(function(s){s.match=null;s.d=null;s.conf=0;});
+  AIS.forEach(function(a){a.used=false;});
+  var pairs=[];
+  SAR.forEach(function(s){AIS.forEach(function(a){var d=km(s,a),dt=a.dt/60;
+    if(d<=R&&dt<=W)pairs.push({s:s,a:a,d:d,dt:dt,c:d/R+dt/W});});});
+  pairs.sort(function(x,y){return x.c-y.c;});
+  pairs.forEach(function(p){if(p.s.match||p.a.used)return;p.s.match=p.a;p.a.used=true;p.s.d=p.d;
+    p.s.conf=Math.round(100*Math.exp(-0.5*(Math.pow(p.d/(R/2),2)+Math.pow(p.dt/(W/2),2))));});
+  var m=SAR.filter(function(s){return s.match;}).length;
+  $('kSar').textContent=SAR.length;$('kAis').textContent=AIS.length;$('kMat').textContent=m;$('kUn').textContent=SAR.length-m;
+}
+
+/* ---------- map ---------- */
+var cv=$('map'),cx=cv.getContext('2d'),view={z:1,ox:0,oy:0},DPR=Math.min(2,window.devicePixelRatio||1),cw=1,ch=1;
+function sizeMap(){var r=cv.parentNode.getBoundingClientRect();cw=r.width;ch=r.height;cv.width=cw*DPR;cv.height=ch*DPR;draw();}
+function base(lat,lon){return {x:(lon-LON0)/(LON1-LON0)*cw,y:(LAT1-lat)/(LAT1-LAT0)*ch};}
+function P(lat,lon){var b=base(lat,lon);return {x:(b.x-cw/2)*view.z+cw/2+view.ox,y:(b.y-ch/2)*view.z+ch/2+view.oy};}
+function inv(x,y){var bx=(x-view.ox-cw/2)/view.z+cw/2,by=(y-view.oy-ch/2)/view.z+ch/2;return {lat:LAT1-by/ch*(LAT1-LAT0),lon:LON0+bx/cw*(LON1-LON0)};}
+var COAST=[[10.45,76.20],[10.30,76.19],[10.10,76.23],[9.98,76.25],[9.85,76.32],[9.70,76.37],[9.55,76.42],[9.40,76.46],[9.30,76.55],[10.45,76.55]];
+function draw(){
+  cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,cw,ch);
+  var g=cx.createLinearGradient(0,0,0,ch);g.addColorStop(0,'#071d3a');g.addColorStop(1,'#04122a');cx.fillStyle=g;cx.fillRect(0,0,cw,ch);
+  cx.font='500 11px IBM Plex Mono,monospace';cx.textBaseline='middle';
+  for(var la=9.4;la<=10.31;la+=0.1){var p=P(la,LON0);cx.strokeStyle='rgba(80,170,230,.18)';cx.beginPath();cx.moveTo(0,p.y);cx.lineTo(cw,p.y);cx.stroke();cx.fillStyle='#7fa7cc';cx.fillText(la.toFixed(2)+'°N',8,p.y-9);}
+  for(var lo=75.6;lo<=76.46;lo+=0.1){var q=P(LAT0,lo);cx.strokeStyle='rgba(80,170,230,.18)';cx.beginPath();cx.moveTo(q.x,0);cx.lineTo(q.x,ch);cx.stroke();}
+  /* AOI */
+  var a=P(10.15,75.72),b=P(9.55,76.18);cx.setLineDash([6,5]);cx.strokeStyle='rgba(80,170,230,.6)';cx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);cx.setLineDash([]);
+  /* land */
+  cx.beginPath();COAST.forEach(function(c,i){var p=P(c[0],c[1]);i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y);});cx.closePath();
+  cx.fillStyle='rgba(20,90,150,.35)';cx.fill();cx.strokeStyle='#38bdf8';cx.lineWidth=2;cx.stroke();cx.lineWidth=1;
+  var pk=P(9.97,76.24);cx.fillStyle='#fff';cx.beginPath();cx.arc(pk.x,pk.y,4,0,7);cx.fill();cx.font='600 11px IBM Plex Mono,monospace';cx.fillText('PORT OF KOCHI',pk.x+10,pk.y);
+  /* layers */
+  var showS=$('lSar').checked,showA=$('lAis').checked,showL=$('lLnk').checked;
+  if(showL)SAR.forEach(function(s){if(!s.match)return;var u=P(s.lat,s.lon),v=P(s.match.lat,s.match.lon);cx.strokeStyle='#22d3ee';cx.lineWidth=2;cx.beginPath();cx.moveTo(u.x,u.y);cx.lineTo(v.x,v.y);cx.stroke();cx.lineWidth=1;});
+  if(showA)AIS.forEach(function(a){var p=P(a.lat,a.lon),r=(a.cog-90)*Math.PI/180;cx.save();cx.translate(p.x,p.y);cx.rotate(r);cx.fillStyle='#38bdf8';cx.beginPath();cx.moveTo(10,0);cx.lineTo(-7,6);cx.lineTo(-7,-6);cx.closePath();cx.fill();cx.restore();
+    if(!a.sar||!a.used){cx.fillStyle='#cfe8ff';cx.font='600 11px IBM Plex Mono,monospace';cx.fillText(a.n,p.x+14,p.y+2);}});
+  if(showS)SAR.forEach(function(s){var p=P(s.lat,s.lon);
+    if(s.match){cx.strokeStyle='#7dd3fc';cx.lineWidth=2;cx.beginPath();cx.arc(p.x,p.y,10,0,7);cx.stroke();cx.fillStyle='#2563eb';cx.beginPath();cx.arc(p.x,p.y,5,0,7);cx.fill();cx.lineWidth=1;
+      cx.fillStyle='#e6f3ff';cx.font='600 11px IBM Plex Mono,monospace';cx.fillText(s.id+' ⇔ '+(s.match.short||s.match.n.replace('MT ','MT ').split(' ').slice(0,2).join(' ')),p.x+16,p.y);}
+    else{cx.fillStyle='#f59e0b';cx.beginPath();cx.arc(p.x,p.y,8,0,7);cx.fill();cx.fillStyle='#ffd27a';cx.font='600 11px IBM Plex Mono,monospace';cx.fillText(s.id+' [REVIEW]',p.x+14,p.y);}
+    if(s.id===sel){cx.strokeStyle='#fff';cx.lineWidth=2;cx.strokeRect(p.x-16,p.y-16,32,32);cx.lineWidth=1;}});
+}
+function pickAt(x,y){var best=null,bd=22;
+  SAR.forEach(function(s){var p=P(s.lat,s.lon),d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best=s.id;}});return best;}
+var drag=null;
+cv.addEventListener('pointerdown',function(e){var r=cv.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,ox:view.ox,oy:view.oy,moved:false};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';});
+cv.addEventListener('pointermove',function(e){var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,ll=inv(x,y);$('coord').textContent=ll.lat.toFixed(3)+'°N, '+ll.lon.toFixed(3)+'°E';
+  if(!drag)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;view.ox=drag.ox+dx;view.oy=drag.oy+dy;draw();});
+cv.addEventListener('pointerup',function(e){var r=cv.getBoundingClientRect();if(drag&&!drag.moved){var id=pickAt(e.clientX-r.left,e.clientY-r.top);if(id){sel=id;draw();inspect();}}drag=null;cv.style.cursor='grab';});
+cv.addEventListener('wheel',function(e){e.preventDefault();zoom(e.deltaY<0?1.15:1/1.15);},{passive:false});
+function zoom(f){view.z=clamp(view.z*f,0.6,6);draw();}
+$('zin').onclick=function(){zoom(1.25);};$('zout').onclick=function(){zoom(0.8);};$('zrst').onclick=function(){view={z:1,ox:0,oy:0};draw();};
+['lSar','lAis','lLnk'].forEach(function(i){$(i).addEventListener('change',draw);});
+$('sR').addEventListener('input',function(){R=+this.value;$('vR').textContent=R.toFixed(1)+' km';fuse();draw();inspect();});
+$('sW').addEventListener('input',function(){W=+this.value;$('vW').textContent=W+' min';fuse();draw();inspect();});
+
+function fmtLat(v){return v.toFixed(4)+'° N';}function fmtLon(v){return v.toFixed(4)+'° E';}
+function inspect(){
+  var s=SAR.filter(function(x){return x.id===sel;})[0];if(!s)return;
+  var m=s.match,h='<h3>TARGET TELEMETRY INSPECTOR</h3><div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0"><span class="name">'+s.id+'</span><span class="tag '+(m?'m':'u')+'">'+(m?'MATCHED':'UNMATCHED')+'</span></div>'+
+  '<div class="cells"><div class="cell"><small>LATITUDE</small><b>'+fmtLat(s.lat)+'</b></div><div class="cell"><small>LONGITUDE</small><b>'+fmtLon(s.lon)+'</b></div>'+
+  '<div class="cell"><small>SAR RCS (σ°)</small><b>'+s.rcs.toFixed(1)+' dB</b></div><div class="cell"><small>EST. DIMENSIONS</small><b>'+s.dim+'</b></div></div>';
+  if(m){h+='<div class="kv"><span>Matched MMSI:</span><b>'+m.mmsi+'</b></div><div class="kv"><span>Vessel Name:</span><b style="font-family:var(--sans)">'+m.n+'</b></div>'+
+   '<div class="kv"><span>SOG / COG:</span><b>'+m.sog.toFixed(1)+' kn / '+m.cog+'°</b></div><div class="kv"><span>Spatial Offset (Δd):</span><b style="color:#0a7f99">'+Math.round(s.d*1000)+' m</b></div>'+
+   '<div class="kv"><span>Temporal Offset (Δt):</span><b style="color:#0a7f99">'+m.dt+' s</b></div><div class="kv" style="margin-top:8px"><span>Fusion Confidence:</span><span class="conf">'+s.conf+'%</span></div>';}
+  else{h+='<p class="sub">No AIS broadcast inside the current gates (Δd ≤ '+R.toFixed(1)+' km, Δt ≤ '+W+' min). This target is a candidate dark vessel and is queued for human review.</p>';}
+  h+='<button class="flag'+(flags[s.id]?' on':'')+'" id="flag">'+(flags[s.id]?'✔ FLAGGED FOR HUMAN REVIEW':'⚑ FLAG FOR HUMAN REVIEW')+'</button>';
+  $('tel').innerHTML=h;$('flag').onclick=function(){flags[s.id]=!flags[s.id];inspect();};
+}
+
+/* ---------- SAR image tab (synthetic) ---------- */
+var sc=$('sar'),sx=sc.getContext('2d'),SW=sc.width,SH=sc.height,sarImg=null,sarShips=[];
+function rng(seed){return function(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};}
+function buildSar(){
+  var rnd=rng(7),im=sx.createImageData(SW,SH),I=new Float32Array(SW*SH);
+  for(var i=0;i<I.length;i++){var u=(rnd()+rnd()+rnd()+rnd())/4;I[i]=0.12*(0.5+u);}
+  sarShips=SAR.map(function(s,k){var x=Math.round((s.lon-LON0)/(LON1-LON0)*SW),y=Math.round((LAT1-s.lat)/(LAT1-LAT0)*SH),L=parseInt(s.dim)/16;return {x:x,y:y,L:L,id:s.id};});
+  sarShips.forEach(function(s){for(var dy=-3;dy<=3;dy++)for(var dx=-Math.round(s.L/2);dx<=Math.round(s.L/2);dx++){var xx=s.x+dx,yy=s.y+dy;if(xx>=0&&yy>=0&&xx<SW&&yy<SH)I[yy*SW+xx]+=1.6*(0.6+0.4*rnd());}
+    for(var t=6;t<110;t++){var xx2=s.x+t,yy2=s.y+Math.round(t*0.12);if(xx2<SW&&yy2<SH)I[yy2*SW+xx2]+=0.5*(1-t/110);}});
+  for(var j=0;j<I.length;j++){var v=Math.min(255,Math.pow(I[j],0.6)*190);im.data[j*4]=im.data[j*4+1]=im.data[j*4+2]=v;im.data[j*4+3]=255;}
+  sarImg=im;
+}
+function drawSar(){
+  if(!sarImg)buildSar();sx.putImageData(sarImg,0,0);
+  var T=+$('sT').value;$('vT').textContent=T.toFixed(1);
+  var found=sarShips.filter(function(s){return 1.9/0.14>=T;}); /* peak/bg ratio of simulated ships is about 13.5 */
+  var rows='';found.forEach(function(s,i){var snr=10*Math.log10(1.9/0.14);
+    sx.strokeStyle='#ff4d4f';sx.lineWidth=2;sx.strokeRect(s.x-s.L/2-8,s.y-14,s.L+16,28);sx.fillStyle='#ff4d4f';sx.font='600 13px IBM Plex Mono,monospace';sx.fillText('#'+(i+1),s.x-s.L/2-8,s.y-20);
+    rows+='<tr><td>#'+(i+1)+'</td><td>'+s.x+','+s.y+'</td><td>'+snr.toFixed(1)+'</td><td>'+Math.round(s.L*16)+'</td></tr>';});
+  $('detRows').innerHTML=rows;
+  $('detInfo').textContent=found.length?found.length+' candidates above threshold.':'Threshold too high: nothing detected. Lower T.';
+}
+$('sT').addEventListener('input',drawSar);
+
+/* ---------- init ---------- */
+fuse();window.addEventListener('resize',sizeMap);sizeMap();inspect();
+})();
+</script>
+</body>
+</html>
